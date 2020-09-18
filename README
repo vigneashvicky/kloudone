@@ -1,2 +1,3 @@
 In settings.py
 need to add a DB settings in settings.py
+mysql DB dump send through mail
