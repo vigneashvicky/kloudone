@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular-route.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular-animate.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular-aria.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular-messages.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.8/angular-material.min.js"></script>
+<body>
+{% verbatim %}
+<div ng-app="myApp1" class="container" ng-controller="myCtrl">
+    <br>
+    <div class="row">
+        <div class="col-md-12">
+            <div  ng-form="mainform">
+            <div class="col-md-3">
+                <input type="text" placeholder="Item Name" ng-model="Item_Name" required/>
+            </div>
+            <div class="col-md-3">
+                <input type="number" placeholder="Item Price" ng-model="Item_Price" required/>
+            </div>
+            <div class="col-md-3">
+                <input type="number" placeholder="Item Quantity" ng-model="Item_Quantity" required/>
+            </div>
+            </div>
+            <div class="col-md-3">
+                <input type="submit" value="Submit" class="btn btn-primary"
+                                           ng-disabled="mainform.$invalid" ng-click="mainform.$valid && submit_fun()"/>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <table>
+            <tr>
+                <th>S.No</th>
+                <th>Item Name</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th>Total Value</th>
+                <th>Delete</th>
+            </tr>
+            <tr ng-repeat="x in maintable">
+                <td>{{$index +1}}</td>
+                <td>{{ x.Item_Name }}</td>
+                <td>{{ x.Item_Price }}</td>
+                <td>{{ x.Item_Quantity }}</td>
+                <td>{{ x.Totalprice = x.Item_Quantity *  x.Item_Price}}</td>
+                <td><a class="btn btn-xs delete-record" ng-click="removeRow($index)"><i class="glyphicon glyphicon-trash"></i></a></td>
+            </tr>
+        </table>
+    </div>
+    <div class="row">
+        <br>
+    <input type="submit" value="SaveOrder" class="btn btn-primary"
+                                           ng-disabled="maintable.length <= 0" ng-click="save_fun()"/>
+    </div>
+    <div class="row">
+        <table>
+            <tr>
+                <th>S.No</th>
+                <th>Client Name</th>
+                <th>Order Item</th>
+                <th>Price per unit</th>
+                <th>Quantity</th>
+                <th>Total</th>
+                <th>File Path</th>
+            </tr>
+            <tr ng-repeat="x in maintab">
+                <td>{{$index +1}}</td>
+                <td>{{ x.order_Clientname }}</td>
+                <td>{{ x.order_item }}</td>
+                <td>{{ x.order_itemprice }}</td>
+                <td>{{ x.order_itemquantity }}</td>
+                <td>{{ x.order_Totalprice}}</td>
+                <td>{{ x.order_filepath}}</td>
+            </tr>
+        </table>
+    </div>
+</div>
+{% endverbatim %}
+
+<style>
+table, th , td  {
+  border: 1px solid grey;
+  border-collapse: collapse;
+  padding: 5px;
+}
+table tr:nth-child(odd) {
+  background-color: #f1f1f1;
+}
+table tr:nth-child(even) {
+  background-color: #ffffff;
+}
+
+
+</style>
+
+<script>
+var myApp = angular.module('myApp1', ['ngMaterial'])
+    .config(function($httpProvider) {
+        $httpProvider.defaults.xsrfCookieName = 'csrftoken';
+        $httpProvider.defaults.xsrfHeaderName = 'X-CSRFToken';
+    });
+
+     myApp.run(function($mdDateLocale, $filter) {
+        $mdDateLocale.formatDate = function(date) {
+            return $filter('date')(date, "dd-MMM-yyyy");
+        };
+    })
+
+myApp.controller('myCtrl', ['$scope', 'testService', '$mdDialog', '$rootScope', '$window', '$filter','$element',
+    function($scope, testService, $mdDialog, $rootScope, $window, $filter,$element) {
+    $element.find('input').on('keydown', function(ev) {
+            ev.stopPropagation();
+        });
+
+debugger;
+        var detail = JSON.parse(sessionStorage.getItem('today'));
+        $scope.name = detail.client_name;
+        $scope.gid =detail.client_id;
+        if (detail == null){
+        $window.location.href = "http://127.0.0.1:8001/";
+        }
+        client_id = detail.client_id;
+        if(client_id > 0){
+    loaddata();
+     function loaddata() {
+                var data = {
+                    "Params": {
+                    "Action":"Order_Get"
+                        }
+                }
+                var get_purchase = testService.gettabledata(data)
+                get_purchase.then(function (result) {
+                debugger;
+                    if (result.data.MESSAGE == 'FOUND') {
+                        $scope.maintab = result.data.DATA
+                    }
+                }).finally($scope.endloading);
+            }
+
+$scope.maintable = [];
+$scope.submit_fun = function () {
+	//Add the new item to the Array.
+	var client = {
+		Item_Name : $scope.Item_Name,
+		Item_Price : $scope.Item_Price,
+		Item_Quantity : $scope.Item_Quantity,
+
+	};
+	$scope.maintable.push(client);
+	$scope.Item_Name = "";
+	$scope.Item_Price = "";
+	$scope.Item_Quantity ="";
+}
+
+$scope.removeRow = function (index) {
+	var name = $scope.maintable[index].Item_Name;
+	if ($window.confirm("Do you want to delete: " + name)) {
+		$scope.maintable.splice(index, 1);
+	}
+}
+
+
+
+    $scope.save_fun = function(){
+    debugger;
+    var data = {
+                    "Params": {
+
+                    "Array":$scope.maintable,
+                    "Client_name":$scope.name,
+                    "Client_Id" : $scope.gid
+                        }
+                }
+                var data ={
+                data:data,
+                "Action":"INSERT_ORDER"
+                }
+                var get_purchase = testService.settabledata(data)
+                get_purchase.then(function (result) {
+                debugger;
+                    if (result.data.MESSAGE == 'SUCCESS') {
+                        alert('Saved Successfully')
+                        $scope.maintable = [];
+                        loaddata();
+                    }
+                }).finally($scope.endloading);
+
+
+
+
+
+    }
+
+
+
+
+
+
+
+
+}
+else{
+debugger;
+$window.location.href = "http://127.0.0.1:8001/";
+}
+
+}
+
+
+]);
+
+myApp.service("testService", function($http) {
+     this.settabledata = function (data) {
+            var response = $http.post( "/save_orders/", data);
+            return response;
+        }
+      this.gettabledata = function (data) {
+            var response = $http.post( "/filesmryget/", data);
+            return response;
+        }
+});
+
+</script>
+</body>
+</html>
