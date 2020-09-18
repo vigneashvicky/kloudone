@@ -89,9 +89,9 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760 # 10 mb
 DATABASES = {
    'default': {
        'ENGINE': 'django.db.backends.mysql',
-       'NAME': 'Task_Schema',
-       'USER': 'root',
-       'PASSWORD': 'Vsolv@123',
+       'NAME': '',
+       'USER': '',
+       'PASSWORD': '',
        'HOST': 'localhost',
        'PORT': '3360',
    }
